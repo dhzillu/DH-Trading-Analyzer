@@ -1,6 +1,5 @@
 import streamlit as st
 from google import genai
-from google.genai import types
 from PIL import Image
 
 st.set_page_config(
@@ -59,7 +58,7 @@ Act as an elite Quantitative Price Action & Binary Trading Technical Analyst. Th
 
 3. 1-MINUTE CANDLE PSYCHOLOGY:
    - Precisely name and interpret the exact formation of the last 2-3 candles (e.g., Hammer, Engulfing, Pinbar, Doji, Marubozu).
-   - Explain the battle between buyers and sellers within the *most recent* candle and what it implies for the very next candle.
+   - Explain the battle between buyers and sellers within the most recent candle and what it implies for the very next candle.
 
 4. FINAL VERDICT & 1-MINUTE PREDICTION:
    - Direction: **CALL (UP / Green)** OR **PUT (DOWN / Red)**
@@ -79,28 +78,28 @@ if uploaded_file is not None:
             st.error("API Key পাওয়া যায়নি! দয়া করে Streamlit Secrets চেক করুন।")
         else:
             with st.spinner("মার্কেট কাঠামো ও ক্যান্ডেলস্টিক সাইকোলজি বিশ্লেষণ করা হচ্ছে..."):
-                client = genai.Client(api_key=api_key)
-                
-                # ট্রাফিক জ্যাম এড়াতে ব্যাকআপ মডেলের তালিকা
-                available_models = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash']
-                response_text = None
-                last_error = None
-                
-                for target_model in available_models:
-                    try:
-                        response = client.models.generate_content(
-                            model=target_model,
-                            contents=[image, MASTER_PROMPT]
-                        )
-                        response_text = response.text
-                        break
-                    except Exception as err:
-                        last_error = err
-                        continue
-                
-                if response_text:
+                try:
+                    client = genai.Client(api_key=api_key)
+                    
+                    # নির্ভরযোগ্য অ্যাক্টিভ মডেল
+                    response = client.models.generate_content(
+                        model='gemini-2.0-flash',
+                        contents=[image, MASTER_PROMPT]
+                    )
+                    
                     st.success("বিশ্লেষণ সম্পন্ন হয়েছে!")
                     st.markdown("### 📊 অ্যানালাইসিস রেজাল্ট:")
-                    st.markdown(response_text)
-                else:
-                    st.error(f"সার্ভার ব্যস্ততার কারণে সাময়িক সমস্যা হয়েছে: {str(last_error)}")
+                    st.markdown(response.text)
+                except Exception as e:
+                    # যদি gemini-2.0-flash ব্যস্ত থাকে তবে সরাসরি লাইটওয়েট ব্যাকআপ
+                    try:
+                        client = genai.Client(api_key=api_key)
+                        response = client.models.generate_content(
+                            model='gemini-2.0-flash-lite',
+                            contents=[image, MASTER_PROMPT]
+                        )
+                        st.success("বিশ্লেষণ সম্পন্ন হয়েছে!")
+                        st.markdown("### 📊 অ্যানালাইসিস রেজাল্ট:")
+                        st.markdown(response.text)
+                    except Exception as err:
+                        st.error(f"একটি সমস্যা হয়েছে: {str(err)}")
