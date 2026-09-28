@@ -36,8 +36,12 @@ st.markdown("""
 st.title("🎯 DH Gemini AI Vision Chart Analyzer")
 st.caption("1-Minute Binary Options Candlestick Deep Analyzer")
 
-# Sidebar for API Key
-api_key = st.sidebar.text_input("Enter Gemini API Key", type="password")
+# Streamlit Secrets থেকে স্বয়ংক্রিয়ভাবে API Key সংগ্রহ
+api_key = st.secrets.get("GEMINI_API_KEY", "")
+
+if not api_key:
+    st.sidebar.warning("Secrets-এ API Key পাওয়া যায়নি!")
+    api_key = st.sidebar.text_input("Enter Gemini API Key manually", type="password")
 
 uploaded_file = st.file_uploader("Upload 1-Minute Chart Screenshot (Quotex)", type=["jpg", "jpeg", "png"])
 
@@ -55,7 +59,7 @@ Act as an elite Quantitative Price Action & Binary Trading Technical Analyst. Th
 
 3. 1-MINUTE CANDLE PSYCHOLOGY:
    - Precisely name and interpret the exact formation of the last 2-3 candles (e.g., Hammer, Engulfing, Pinbar, Doji, Marubozu).
-   - Explain the battle between buyers and sellers within the *most recent* candle and what it implies for the very next candle.
+   - Explain the battle between buyers and sellers within the most recent candle and what it implies for the very next candle.
 
 4. FINAL VERDICT & 1-MINUTE PREDICTION:
    - Direction: **CALL (UP / Green)** OR **PUT (DOWN / Red)**
@@ -72,13 +76,13 @@ if uploaded_file is not None:
     
     if st.button("🚀 Analyze Next Candle"):
         if not api_key:
-            st.error("দয়া করে বাঁ-পাশের মেন্যু (Sidebar) থেকে আপনার Gemini API Key টি দিন!")
+            st.error("API Key পাওয়া যায়নি! দয়া করে Streamlit Secrets চেক করুন।")
         else:
             with st.spinner("মার্কেট কাঠামো ও ক্যান্ডেলস্টিক সাইকোলজি বিশ্লেষণ করা হচ্ছে..."):
                 try:
                     client = genai.Client(api_key=api_key)
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.8-flash',
                         contents=[image, MASTER_PROMPT]
                     )
                     st.success("বিশ্লেষণ সম্পন্ন হয়েছে!")
