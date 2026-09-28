@@ -78,28 +78,27 @@ if uploaded_file is not None:
             st.error("API Key পাওয়া যায়নি! দয়া করে Streamlit Secrets চেক করুন।")
         else:
             with st.spinner("মার্কেট কাঠামো ও ক্যান্ডেলস্টিক সাইকোলজি বিশ্লেষণ করা হচ্ছে..."):
-                try:
-                    client = genai.Client(api_key=api_key)
-                    
-                    # নির্ভরযোগ্য অ্যাক্টিভ মডেল
-                    response = client.models.generate_content(
-                        model='gemini-2.0-flash',
-                        contents=[image, MASTER_PROMPT]
-                    )
-                    
-                    st.success("বিশ্লেষণ সম্পন্ন হয়েছে!")
-                    st.markdown("### 📊 অ্যানালাইসিস রেজাল্ট:")
-                    st.markdown(response.text)
-                except Exception as e:
-                    # যদি gemini-2.0-flash ব্যস্ত থাকে তবে সরাসরি লাইটওয়েট ব্যাকআপ
+                client = genai.Client(api_key=api_key)
+                # গুগল এরর মেসেজে প্রস্তাবিত মডেলগুলোর তালিকা
+                models_to_try = ['gemini-3.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-flash-lite']
+                response_text = None
+                error_msg = ""
+                
+                for target_model in models_to_try:
                     try:
-                        client = genai.Client(api_key=api_key)
                         response = client.models.generate_content(
-                            model='gemini-2.0-flash-lite',
+                            model=target_model,
                             contents=[image, MASTER_PROMPT]
                         )
-                        st.success("বিশ্লেষণ সম্পন্ন হয়েছে!")
-                        st.markdown("### 📊 অ্যানালাইসিস রেজাল্ট:")
-                        st.markdown(response.text)
-                    except Exception as err:
-                        st.error(f"একটি সমস্যা হয়েছে: {str(err)}")
+                        response_text = response.text
+                        break
+                    except Exception as e:
+                        error_msg = str(e)
+                        continue
+                
+                if response_text:
+                    st.success("বিশ্লেষণ সম্পন্ন হয়েছে!")
+                    st.markdown("### 📊 অ্যানালাইসিস রেজাল্ট:")
+                    st.markdown(response_text)
+                else:
+                    st.error(f"একটি সমস্যা হয়েছে: {error_msg}")
