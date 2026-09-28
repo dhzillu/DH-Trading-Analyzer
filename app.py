@@ -59,7 +59,7 @@ Act as an elite Quantitative Price Action & Binary Trading Technical Analyst. Th
 
 3. 1-MINUTE CANDLE PSYCHOLOGY:
    - Precisely name and interpret the exact formation of the last 2-3 candles (e.g., Hammer, Engulfing, Pinbar, Doji, Marubozu).
-   - Explain the battle between buyers and sellers within the most recent candle and what it implies for the very next candle.
+   - Explain the battle between buyers and sellers within the *most recent* candle and what it implies for the very next candle.
 
 4. FINAL VERDICT & 1-MINUTE PREDICTION:
    - Direction: **CALL (UP / Green)** OR **PUT (DOWN / Red)**
@@ -79,14 +79,28 @@ if uploaded_file is not None:
             st.error("API Key পাওয়া যায়নি! দয়া করে Streamlit Secrets চেক করুন।")
         else:
             with st.spinner("মার্কেট কাঠামো ও ক্যান্ডেলস্টিক সাইকোলজি বিশ্লেষণ করা হচ্ছে..."):
-                try:
-                    client = genai.Client(api_key=api_key)
-                    response = client.models.generate_content(
-                        model='gemini-3.8-flash',
-                        contents=[image, MASTER_PROMPT]
-                    )
+                client = genai.Client(api_key=api_key)
+                
+                # ট্রাফিক জ্যাম এড়াতে ব্যাকআপ মডেলের তালিকা
+                available_models = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash']
+                response_text = None
+                last_error = None
+                
+                for target_model in available_models:
+                    try:
+                        response = client.models.generate_content(
+                            model=target_model,
+                            contents=[image, MASTER_PROMPT]
+                        )
+                        response_text = response.text
+                        break
+                    except Exception as err:
+                        last_error = err
+                        continue
+                
+                if response_text:
                     st.success("বিশ্লেষণ সম্পন্ন হয়েছে!")
                     st.markdown("### 📊 অ্যানালাইসিস রেজাল্ট:")
-                    st.markdown(response.text)
-                except Exception as e:
-                    st.error(f"একটি সমস্যা হয়েছে: {str(e)}")
+                    st.markdown(response_text)
+                else:
+                    st.error(f"সার্ভার ব্যস্ততার কারণে সাময়িক সমস্যা হয়েছে: {str(last_error)}")
